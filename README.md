@@ -7,7 +7,7 @@ This repository contains **two** variants of the pipeline:
 2. **Native Python Variant**: Runs directly on your host machine (*recommended for modularity and advanced users*)
 
 ## Option 1: DOCKER VARIANT
-Located in the *`\docker_variant`* folder.
+Located in the *`/docker_variant`* folder.
 
 This version is pre-packaged with all the dependencies required to run the pipeline.
 
