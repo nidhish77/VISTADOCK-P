@@ -4,6 +4,7 @@ import multiprocessing
 import math
 import shutil
 import sys
+import time
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 
@@ -14,52 +15,10 @@ class LigandPrepper:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-    def _count_mols(self, file_path):
-        """Helper to count molecules in SDF or MOL2."""
-        count = 0
-        if not os.path.exists(file_path): return 0
-        
-        if file_path.endswith('.mol2'):
-            delim = "@<TRIPOS>MOLECULE"
-        else:
-            delim = "$$$$" 
-            
-        try:
-            with open(file_path, 'r', errors='ignore') as f:
-                content = f.read()
-                count = content.count(delim)
-        except:
-            return 0
-        return count
-
-    def _trim_to_last_delimiter(self, file_path):
-        """
-        Reads a file and truncates any incomplete data at the end.
-        Ensures the file ends perfectly with '$$$$' or '@<TRIPOS>MOLECULE'.
-        Prevents Smina 'tree.h(133)' crashes caused by killed processes.
-        """
-        if not os.path.exists(file_path): return
-        
-        is_mol2 = file_path.endswith('.mol2')
-        delim = "@<TRIPOS>MOLECULE" if is_mol2 else "$$$$"
-        
-        with open(file_path, 'r', errors='ignore') as f:
-            content = f.read()
-            
-        last_delim_pos = content.rfind(delim)
-        
-        if last_delim_pos == -1:
-            with open(file_path, 'w') as f: f.write("") 
-            return
-        
-        if not is_mol2:
-            cutoff = last_delim_pos + 4
-            clean_content = content[:cutoff] + "\n" 
-        else:
-            clean_content = content 
-
-        with open(file_path, 'w') as f:
-            f.write(clean_content)
+        if not shutil.which("obabel"):
+            print("[CRITICAL ERROR] 'obabel' executable not found in PATH.")
+            print("                 Please ensure OpenBabel is installed in the container.")
+            sys.exit(1)
 
     def _split_structure_file(self, input_file, chunks_dir, num_chunks):
         """
@@ -112,6 +71,7 @@ class LigandPrepper:
             fname = os.path.join(chunks_dir, f"chunk_{i}{ext}")
             with open(fname, 'w') as f:
                 for m in subset: f.write(m)
+                # Ensure newline to prevent hang
                 f.write("\n")
             chunk_files.append(fname)
             
@@ -119,62 +79,82 @@ class LigandPrepper:
 
     def _run_obabel_chunk(self, args):
         """
-        Worker function with DYNAMIC TIMEOUT.
+        Worker that processes a chunk LIGAND-BY-LIGAND.
+        This prevents one bad ligand from hanging the whole chunk for 30s.
         """
-        input_file, output_file = args
+        input_chunk, output_chunk = args
         
-        input_count = self._count_mols(input_file)
-        if input_count == 0: return False
+        # 1. Read the chunk
+        try:
+            with open(input_chunk, 'r') as f:
+                content = f.read()
+        except:
+            return False
 
-        dynamic_timeout = (input_count * 30) + 60
+        # 2. Parse into individual ligands
+        is_mol2 = input_chunk.endswith('.mol2')
+        delim = "@<TRIPOS>MOLECULE" if is_mol2 else "$$$$"
+        
+        if is_mol2:
+            # Mol2 split: Delimiter is at START
+            raw_mols = [delim + m for m in content.split(delim) if m.strip()]
+        else:
+            # SDF split: Delimiter is at END
+            raw_mols = []
+            for m in content.split("$$$$"):
+                if m.strip():
+                    raw_mols.append(m.strip() + "\n$$$$\n")
 
-        base_cmd = [
-            "obabel", input_file, 
-            "-osdf", "-O", output_file, 
-            "-p", "7.4", "--partialcharge", "gasteiger"
-        ]
+        valid_count = 0
         
-        strategies = [
-            ["--gen3d", "--minimize", "--steps", "500", "--ff", "MMFF94"],
-            ["--gen3d", "--minimize", "--steps", "500", "--ff", "UFF"],
-            [] 
-        ]
-        
-        for flags in strategies:
-            cmd = base_cmd + flags
-            try:
-                subprocess.run(
-                    cmd, 
-                    check=True, 
-                    stdout=subprocess.DEVNULL, 
-                    stderr=subprocess.DEVNULL, 
-                    timeout=dynamic_timeout
-                )
+        # 3. Process individually
+        with open(output_chunk, 'w') as out_f:
+            for i, mol_data in enumerate(raw_mols):
+                # Write single temporary ligand
+                temp_in = f"{input_chunk}_temp_{i}.{'mol2' if is_mol2 else 'sdf'}"
+                temp_out = f"{input_chunk}_temp_out_{i}.sdf" # Always output SDF
                 
-                # Success path
-                if os.path.exists(output_file):
-                    self._trim_to_last_delimiter(output_file) 
-                    output_count = self._count_mols(output_file)
-                    if output_count >= int(input_count * 0.9):
-                        return True
-                        
-            except subprocess.TimeoutExpired:
-                # Timeout path
-                if os.path.exists(output_file):
-                     self._trim_to_last_delimiter(output_file) 
-                     output_count = self._count_mols(output_file)
+                with open(temp_in, 'w') as t:
+                    t.write(mol_data)
+        
+                # -isdf/-imol2 : Input format
+                # -osdf : Output format (Forces SDF)
+                # -O : Output filename
+                input_flag = "-imol2" if is_mol2 else "-isdf"
+                
+                cmd = [
+                    "obabel", input_flag, temp_in, 
+                    "-osdf", "-O", temp_out,
+                    "-p", "7.4", "--partialcharge", "gasteiger", "--gen3d"
+                ]
 
-                     if output_count >= int(input_count * 0.9):
-                         return True
-                continue
-            except:
-                continue
-        return False
+                try:
+                    subprocess.run(
+                        cmd, 
+                        check=True, 
+                        stdout=subprocess.DEVNULL, 
+                        stderr=subprocess.DEVNULL, 
+                        timeout=3
+                    )
+                    
+                    if os.path.exists(temp_out):
+                        with open(temp_out, 'r') as res:
+                            out_f.write(res.read())
+                            valid_count += 1
+                
+                except subprocess.TimeoutExpired:
+                    pass
+                except Exception:
+                    pass
+                finally:
+                    # Cleanup temp files immediately
+                    if os.path.exists(temp_in): os.remove(temp_in)
+                    if os.path.exists(temp_out): os.remove(temp_out)
+
+        return valid_count > 0
 
     def _sanitize_sdf(self, sdf_path):
-        """
-        Ensures the final merged SDF is clean for Smina.
-        """
+        """Ensures the final merged SDF is clean for Smina."""
         if not os.path.exists(sdf_path): return
 
         print(f"      > Sanitizing output for Smina compatibility...")
@@ -187,7 +167,6 @@ class LigandPrepper:
             
             for block in raw_blocks:
                 if block.strip(): 
-                    # Strip leading newlines, add correct footer
                     clean_mol = block.lstrip() + "\n$$$$\n"
                     clean_blocks.append(clean_mol)
             
@@ -201,15 +180,14 @@ class LigandPrepper:
             print(f"[WARNING] Sanitization failed: {e}")
 
     def convert_and_clean(self, input_file):
-        """
-        Ligand Preparation Logic.
-        """
+        """Ligand Preparation Logic."""
         filename = os.path.basename(input_file)
         name, ext = os.path.splitext(filename)
         final_output = os.path.join(self.output_dir, f"{name}_prepared.sdf")
         
         print(f"[PREP] Processing {filename}...")
 
+        # Parallelize if CPUs > 1
         if self.cpu_count > 1:
             chunks_dir = os.path.join(self.output_dir, "prep_chunks")
             chunk_files = self._split_structure_file(input_file, chunks_dir, self.cpu_count)
@@ -230,18 +208,28 @@ class LigandPrepper:
             ctx = multiprocessing.get_context('spawn')
             
             with ctx.Pool(self.cpu_count) as pool:
-                for _ in pool.imap(self._run_obabel_chunk, tasks):
-                    print(".", end="", flush=True)
+                results = pool.map(self._run_obabel_chunk, tasks)
+            
             print(" Done.")
+
+            print("      > Waiting 5s for disk sync...")
+            time.sleep(5)
                 
             print(f"      > Merging results...")
+            valid_mols = 0
             with open(final_output, 'w') as outfile:
                 for fname in out_chunks:
                     if os.path.exists(fname):
                         with open(fname, 'r') as infile:
-                            outfile.write(infile.read())
+                            data = infile.read()
+                            outfile.write(data)
+                            if len(data) > 10: valid_mols += 1
             
             shutil.rmtree(chunks_dir, ignore_errors=True)
+            
+            if valid_mols == 0:
+                print("[ERROR] No valid ligands were produced. Check OpenBabel installation.")
+                return None
 
         else:
             # Serial Mode

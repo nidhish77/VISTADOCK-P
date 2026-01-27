@@ -55,6 +55,7 @@ class PLIPAnalyzer:
         
         expected_xml = os.path.join(output_dir, "report.xml")
         if not os.path.exists(expected_xml):
+            # Fallback: check for files named with the complex prefix or just the newest XML
             import glob
             xmls = glob.glob(os.path.join(output_dir, "*.xml"))
             if xmls:
@@ -109,10 +110,9 @@ class PLIPAnalyzer:
             if not interactions:
                 return "No Specific Interactions"
 
-            # Format Output: "Type: Res1, Res2 | Type: Res3"
+            # Output Formatting: "Type: Res1, Res2 | Type: Res3"
             output_parts = []
             for itype in sorted(interactions.keys()):
-                # Sort residues for consistent output
                 residues = sorted(list(interactions[itype]))
                 res_str = ", ".join(residues)
                 output_parts.append(f"{itype}: {res_str}")
