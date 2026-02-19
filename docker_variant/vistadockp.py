@@ -293,6 +293,7 @@ if __name__ == '__main__':
     
     parser.add_argument('--scoring', choices=['vina', 'vinardo', 'both'], default='both', help='Scoring function (def: both)')
     parser.add_argument('--no_mmgbsa', action='store_true', help='Skip MM-GBSA')
+    parser.add_argument('--single_step', action='store_true', help="Bypass RAPID & BALANCED steps, run only one docking step")
     parser.add_argument('--no_plip', action='store_true', help='Skip PLIP Analysis')
     parser.add_argument('--lipinski', action='store_true', help="Filter input ligands using Lipinski's Rule of 5")
     parser.add_argument('--cnn_scoring', type=str, default='rescore', help="Enable GNINA CNN Re-Scoring (Requires GPU)")

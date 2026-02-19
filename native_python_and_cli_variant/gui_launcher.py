@@ -91,6 +91,9 @@ class PipelineGUI:
         self.frac_balanced = self.create_labelled_entry(dock_frame, "Fraction to keep after BALANCED: ", 1, 2, default="0.3")
         self.frac_ultra = self.create_labelled_entry(dock_frame, "Fraction to keep after ULTRA: ", 2, 2, default="1.0")
 
+        self.single_step_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(dock_frame, text="Single Step Docking (Bypass RAPID and BALANCED, run only ULTRA)", variable=self.single_step_var).grid(row=3, column=0, columnspan=4, sticky='w', pady=(10,0))
+
         ttk.Label(self.scrollable_frame, text="4. Workflow Options", style="Section.TLabel").pack(anchor="w", pady=(20,5), padx=10)
 
         opt_frame = ttk.Frame(self.scrollable_frame)
@@ -244,6 +247,7 @@ class PipelineGUI:
         cmd_parts.append(f'--forcefield {self.ff_var.get()}')
 
         if self.lipinksi_var.get(): cmd_parts.append('--lipinski')
+        if self.single_step_var.get(): cmd_parts.append('--single_step')
         if self.no_mmgbsa_var.get(): cmd_parts.append('--no_mmgbsa')
         if self.no_plip_var.get(): cmd_parts.append('--no_plip')
         if self.cnn_var.get(): cmd_parts.append('--cnn_scoring rescore')

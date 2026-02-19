@@ -498,36 +498,51 @@ def run_screening_track(scoring_func, base_output_dir, return_dict, config):
         log(scoring_func, "Converting Receptor PDB to PDBQT...", color)
         if not convert_pdb_to_pdbqt(rec_pdb, rec_pdbqt):
             log(scoring_func, "Failed to convert Receptor. Aborting.", Colors.FAIL); return
+    # Docking
+    if config.get('single_step', False):
+        log(scoring_func, "Single Step Docking enabled. Bypassing RAPID and BALANCED steps.", color)
 
-    # RAPID 
-    rapid_out = os.path.join(track_dir, "results_RAPID.sdf")
-    rapid_surv = os.path.join(track_dir, "survivors_RAPID.sdf")
-    exh_rapid = config.get('exh_rapid', 2); frac_rapid = config.get('frac_rapid', 0.5)
-    
-    log(scoring_func, f"Step 1: RAPID (Exh={exh_rapid}, Keep={frac_rapid*100}%)", color)
-    run_parallel_docking(rec_pdbqt, lig_sdf, rapid_out, exh_rapid, scoring_func, assigned_cpus, center, size, track_dir)
-    count = filter_sdf(rapid_out, rapid_surv, frac_rapid)
-    if count == 0: return
+        ultra_out = os.path.join(track_dir, "results_ULTRA.sdf")
+        ultra_surv = os.path.join(track_dir, "survivors_ULTRA.sdf")
+        exh_ultra = config.get('exh_ultra', 32)
+        frac_ultra = config.get('frac_ultra', 1.0)
+        
+        log(scoring_func, f"Step 1: ULTRA DOCKING ONLY (Exh={exh_ultra}, Keep={frac_ultra*100}%)", color)
+        # Note: We pass 'lig_sdf' directly here instead of balanced_surv
+        run_parallel_docking(rec_pdbqt, lig_sdf, ultra_out, exh_ultra, scoring_func, assigned_cpus, center, size, track_dir)
+        count = filter_sdf(ultra_out, ultra_surv, frac_ultra)
+        if count == 0: return
 
-    # BALANCED 
-    balanced_out = os.path.join(track_dir, "results_BALANCED.sdf")
-    balanced_surv = os.path.join(track_dir, "survivors_BALANCED.sdf")
-    exh_balanced = config.get('exh_balanced', 8); frac_balanced = config.get('frac_balanced', 0.3)
-    
-    log(scoring_func, f"Step 2: BALANCED (Exh={exh_balanced}, Keep={frac_balanced*100}%)", color)
-    run_parallel_docking(rec_pdbqt, rapid_surv, balanced_out, exh_balanced, scoring_func, assigned_cpus, center, size, track_dir)
-    count = filter_sdf(balanced_out, balanced_surv, frac_balanced)
-    if count == 0: return
+    else:
+        # RAPID 
+        rapid_out = os.path.join(track_dir, "results_RAPID.sdf")
+        rapid_surv = os.path.join(track_dir, "survivors_RAPID.sdf")
+        exh_rapid = config.get('exh_rapid', 2); frac_rapid = config.get('frac_rapid', 0.5)
+        
+        log(scoring_func, f"Step 1: RAPID (Exh={exh_rapid}, Keep={frac_rapid*100}%)", color)
+        run_parallel_docking(rec_pdbqt, lig_sdf, rapid_out, exh_rapid, scoring_func, assigned_cpus, center, size, track_dir)
+        count = filter_sdf(rapid_out, rapid_surv, frac_rapid)
+        if count == 0: return
 
-    # ULTRA
-    ultra_out = os.path.join(track_dir, "results_ULTRA.sdf")
-    ultra_surv = os.path.join(track_dir, "survivors_ULTRA.sdf")
-    exh_ultra = config.get('exh_ultra', 32); frac_ultra = config.get('frac_ultra', 1.0)
-    
-    log(scoring_func, f"Step 3: ULTRA (Exh={exh_ultra}, Keep={frac_ultra*100}%)", color)
-    run_parallel_docking(rec_pdbqt, balanced_surv, ultra_out, exh_ultra, scoring_func, assigned_cpus, center, size, track_dir)
-    count = filter_sdf(ultra_out, ultra_surv, frac_ultra)
-    if count == 0: return
+        # BALANCED 
+        balanced_out = os.path.join(track_dir, "results_BALANCED.sdf")
+        balanced_surv = os.path.join(track_dir, "survivors_BALANCED.sdf")
+        exh_balanced = config.get('exh_balanced', 8); frac_balanced = config.get('frac_balanced', 0.3)
+        
+        log(scoring_func, f"Step 2: BALANCED (Exh={exh_balanced}, Keep={frac_balanced*100}%)", color)
+        run_parallel_docking(rec_pdbqt, rapid_surv, balanced_out, exh_balanced, scoring_func, assigned_cpus, center, size, track_dir)
+        count = filter_sdf(balanced_out, balanced_surv, frac_balanced)
+        if count == 0: return
+
+        # ULTRA
+        ultra_out = os.path.join(track_dir, "results_ULTRA.sdf")
+        ultra_surv = os.path.join(track_dir, "survivors_ULTRA.sdf")
+        exh_ultra = config.get('exh_ultra', 32); frac_ultra = config.get('frac_ultra', 1.0)
+        
+        log(scoring_func, f"Step 3: ULTRA (Exh={exh_ultra}, Keep={frac_ultra*100}%)", color)
+        run_parallel_docking(rec_pdbqt, balanced_surv, ultra_out, exh_ultra, scoring_func, assigned_cpus, center, size, track_dir)
+        count = filter_sdf(ultra_out, ultra_surv, frac_ultra)
+        if count == 0: return
     
     # CNN RESCORING (GPU - Single Process)
 
