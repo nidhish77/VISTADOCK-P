@@ -58,6 +58,7 @@ conda env create -f environment.yml
 conda activate vistadock_p_env
 ```
 
+<<<<<<< HEAD
 Download the GNINA binary as follows:
 ```bash
 wget https://github.com/gnina/gnina/releases/download/v1.0.3/gnina
@@ -65,6 +66,8 @@ chmod +x gnina
 mv gnina $CONDA_PREFIX/bin/  #To ensure GNINA only affects your conda environment
 ```
 
+=======
+>>>>>>> fda99793d70333faa907462fc031f713b1755617
 ### 3. Running the Pipeline:
 You can run the pipeline using the GUI Launcher script present in the *`/native_python_and_cli_variant`* folder.
 
