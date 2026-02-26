@@ -137,6 +137,8 @@ class PipelineGUI:
         self.no_mmgbsa_var = tk.BooleanVar(value=False)
         self.no_plip_var = tk.BooleanVar(value=False)
         
+        ttk.Separator(opt_frame, orient='horizontal').grid(row=6, column=0, columnspan=3, sticky='ew', pady=(15,5))
+        
         self.run_prep_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(opt_frame, text="Perform Ligand Preparation (Uncheck to bypass)", variable = self.run_prep_var, command=self.toggle_prep_options).grid(row=4, column=0, columnspan=2, sticky='w', pady=(10,2))
 
@@ -147,17 +149,17 @@ class PipelineGUI:
         self.prep_ff_var = tk.StringVar(value="MMFF94")
         prep_ffs = ["MMFF94", "MMFF94s", "UFF", "Ghemical", "GAFF"]
         ttk.OptionMenu(self.prep_opts_frame, self.prep_ff_var, "MMFF94", *prep_ffs).grid(row=0, column=1, sticky='w', padx=5)
-
-        ttk.Separator(opt_frame, orient='horizontal').grid(row=6, column=0, columnspan=3, sticky='ew', pady=(15,5))
         
         ttk.Checkbutton(opt_frame, text="Apply Lipinski's Rule of 5 Filter", variable=self.lipinksi_var).grid(row=7, column=0, columnspan=3, sticky='w')
         self.cnn_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(opt_frame, text="Enable GNINA CNN Re-Scoring (Requires GPU)", variable=self.cnn_var).grid(row=8, column=0, columnspan=3, sticky='w')
 
-        ttk.Label(opt_frame, text="GPU Device ID (0,1, ...): ").grid(row=9, column=0, sticky='w', pady=5)
         self.gpu_id_var = tk.StringVar(value="0")
-        tk.Entry(opt_frame, textvariable=self.gpu_id_var, width=5).grid(row=9, column=1, sticky='w', padx=5)
-        ttk.Label(opt_frame, text="(GPU Required for CNN Re-scoring, optional for MM-GBSA acceleration)", font=("Helvetica", 9, "italic")).grid(row=9, column=2, sticky='w', padx=5)
+        gpu_frame = ttk.Frame(opt_frame)
+        gpu_frame.grid(row=9, column=0, columnspan=3, sticky='w', pady=5)
+        ttk.Label(gpu_frame, text="GPU Device ID (0, 1, ....): ").pack(side='left')
+        tk.Entry(gpu_frame, textvariable=self.gpu_id_var, width=5).pack(side='left', padx=5)
+        ttk.Label(gpu_frame, text="(GPU required for CNN Re-scoring, optional for MM-GBSA acceleration)", font=('Helvetica', 9, "italic")).pack(side='left')
         
         ttk.Separator(opt_frame, orient="horizontal").grid(row=10, column=0, columnspan=3, sticky='ew', pady=(15,5))
         
