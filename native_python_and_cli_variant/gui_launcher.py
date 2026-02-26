@@ -185,13 +185,13 @@ class PipelineGUI:
 
         entry_var = tk.StringVar()
         entry = ttk.Entry(frame, textvariable=entry_var)
-        entry.pack(side='left', fill='x', expand=True, padx=5)
 
         def browse():
             filename = filedialog.askopenfilename()
             if filename:  entry_var.set(filename)
 
         ttk.Button(frame, text="Browse...", command=browse).pack(side='right')
+        entry.pack(side='left', fill='x', expand=True, padx=5)
         return entry_var
     
     def create_dir_input(self, label_text, default):
@@ -201,13 +201,13 @@ class PipelineGUI:
 
         entry_var = tk.StringVar()
         entry = ttk.Entry(frame, textvariable=entry_var)
-        entry.pack(side='left', fill='x', expand=True, padx=5)
 
         def browse():
             dirname = filedialog.askdirectory()
             if dirname: entry_var.set(dirname)
 
         ttk.Button(frame, text="Browse...", command=browse).pack(side='right')
+        entry.pack(side='left', fill='x', expand=True, padx=5)
         return entry_var
     
     def create_labelled_entry(self, parent, text, row, col, default=""):
