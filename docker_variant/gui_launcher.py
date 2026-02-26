@@ -181,7 +181,7 @@ class PipelineGUI:
     def create_file_input(self, label_text, placeholder):
         frame = ttk.Frame(self.scrollable_frame)
         frame.pack(fill='x', padx=10, pady=2)
-        ttk.Label(frame, text=label_text, width=15, anchor='w').pack(side='left')
+        ttk.Label(frame, text=label_text, width=25, anchor='w').pack(side='left')
 
         entry_var = tk.StringVar()
         entry = ttk.Entry(frame, textvariable=entry_var)
@@ -197,7 +197,7 @@ class PipelineGUI:
     def create_dir_input(self, label_text, default):
         frame = ttk.Frame(self.scrollable_frame)
         frame.pack(fill='x', padx=10, pady=2)
-        ttk.Label(frame, text=label_text, width=15, anchor='w').pack(side='left')
+        ttk.Label(frame, text=label_text, width=25, anchor='w').pack(side='left')
 
         entry_var = tk.StringVar()
         entry = ttk.Entry(frame, textvariable=entry_var)
