@@ -1,6 +1,6 @@
 # VISTADOCK-P
 
-**VISTADOCK-P** is a high-throughput virtual screening pipeline designed to prioritize high-affinity ligands through a *funnel-like* protocol. It integrates **Consensus Docking** (Vina & Vinardo scoring algorithms via SMINA), **Binding Free Energy Re-scoring** (MM-GBSA via OpenMM), **Convolutional Neural Network Re-scoring** (via GNINA) and **Residue Interaction Analysis** (via PLIP) into an automated loop for effectively screening thousands of ligands.
+**VISTADOCK-P** is a high-throughput virtual screening pipeline designed to prioritize high-affinity ligands through an iterative refinement protocol. It integrates **Consensus Docking** (Vina & Vinardo scoring algorithms via SMINA), **Binding Free Energy Re-scoring** (MM-GBSA via OpenMM), **Convolutional Neural Network Re-scoring** (via GNINA) and **Residue Interaction Analysis** (via PLIP) into automated loops for effectively screening thousands of ligands.
 
 This repository contains **two** variants of the pipeline:
 1. **Docker Variant**: Runs in an isolated Docker container (*recommended for stability*)

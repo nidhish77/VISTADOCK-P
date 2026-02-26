@@ -80,12 +80,12 @@ class LigandPrepper:
 
     def _run_obabel_chunk(self, args):
         """
-        Worker that processes a chunk LIGAND-BY-LIGAND.
-        This prevents one bad ligand from hanging the whole chunk for 30s.
+        Worker that processes a chunk ligand by ligand, 
+        thereby preventing one bad ligand from hanging the whole chunk for 30s.
         """
         input_chunk, output_chunk = args
         
-        # 1. Read the chunk
+        # 1. Read chunk
         try:
             with open(input_chunk, 'r') as f:
                 content = f.read()
@@ -97,10 +97,10 @@ class LigandPrepper:
         delim = "@<TRIPOS>MOLECULE" if is_mol2 else "$$$$"
         
         if is_mol2:
-            # Mol2 split: Delimiter is at START
+            # Mol2 split: Delimiter is at start
             raw_mols = [delim + m for m in content.split(delim) if m.strip()]
         else:
-            # SDF split: Delimiter is at END
+            # SDF split: Delimiter at end
             raw_mols = []
             for m in content.split("$$$$"):
                 if m.strip():
@@ -149,17 +149,17 @@ class LigandPrepper:
                 except Exception:
                     pass
                 finally:
-                    # Cleanup temp files immediately
+                    # Cleanup temp files
                     if os.path.exists(temp_in): os.remove(temp_in)
                     if os.path.exists(temp_out): os.remove(temp_out)
 
         return valid_count > 0
 
     def _sanitize_sdf(self, sdf_path):
-        """Ensures the final merged SDF is clean for Smina."""
+        """Ensures clean final merged SDF for Smina."""
         if not os.path.exists(sdf_path): return
 
-        print(f"      > Sanitizing output for Smina compatibility...")
+        print(f"> Sanitizing output for Smina compatibility...")
         try:
             with open(sdf_path, 'r') as f:
                 content = f.read()
@@ -198,7 +198,7 @@ class LigandPrepper:
                 print("[ERROR] Input file appears empty.")
                 return None
                 
-            print(f"      > Parallelizing across {len(chunk_files)} workers...")
+            print(f"> Parallelizing across {len(chunk_files)} workers...")
             
             tasks = []
             out_chunks = []
@@ -214,10 +214,10 @@ class LigandPrepper:
             
             print(" Done.")
 
-            print("      > Waiting 5s for disk sync...")
+            print("> Waiting 5s for disk sync...")
             time.sleep(5)
                 
-            print(f"      > Merging results...")
+            print(f"> Merging results...")
             valid_mols = 0
             with open(final_output, 'w') as outfile:
                 for fname in out_chunks:
@@ -235,7 +235,7 @@ class LigandPrepper:
 
         else:
             # Serial Mode
-            print(f"      > Running in serial mode (Single CPU)...")
+            print(f"> Running in serial mode (Single CPU)...")
             success = self._run_obabel_chunk((input_file, final_output))
             if not success:
                 print("[ERROR] Ligand preparation failed (Serial Mode).")

@@ -92,7 +92,7 @@ def merge_sdfs(chunk_files, output_file):
 
 def parse_scores_text(filepath):
     """
-    Parses a file (SDF or Mol2) and returns a dictionary:
+    Parses lig file (SDF or Mol2) and returns a dictionary in the following format:
     { 'MoleculeName': { 'TagName': 'TagValue', ... } }
     """
     scores = {}
@@ -152,7 +152,7 @@ def parse_scores_text(filepath):
 
 def merge_cnn_scores(clean_file, scored_file, output_file):
     """
-    Grafts scores from scored_file onto clean_file using pure text manipulation.
+    Grafts scores from scored_file onto clean_file,
     Works for SDF and Mol2.
     """
     if not os.path.exists(clean_file) or not os.path.exists(scored_file):
@@ -216,7 +216,7 @@ def merge_cnn_scores(clean_file, scored_file, output_file):
 
     return True
 
-# Pure CPU Docking Command 
+# Only CPU Docking Command 
 def run_docking_cmd(receptor, ligand, output, exhaustiveness, scoring_func, cpu_count, center, size):
     """
     Standard docking command. Strictly CPU.
@@ -285,11 +285,11 @@ def run_parallel_docking(receptor, input_sdf, output_sdf, exhaustiveness, scorin
             '--quiet'
         ]
 
-        # Silence the individual workers 
+        # Silence individual workers 
         p = subprocess.Popen(cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         processes.append(p)
 
-    # Main Process monitors the workers and draws a clean bar
+    # Main Process monitors workers and draws a clean bar
     total_procs = len(processes)
     while True:
         # Count how many processes have a return code 
@@ -303,14 +303,14 @@ def run_parallel_docking(receptor, input_sdf, output_sdf, exhaustiveness, scorin
         filled_len = int(bar_len * completed // total_procs)
         bar = '=' * filled_len + '-' * (bar_len - filled_len)
         
-        # Printed with \r to overwrite the line
+        # Printed with \r to overwrite line
         sys.stdout.write(f"\r    [{bar}] {percent}% ({completed}/{total_procs} chunks)")
         sys.stdout.flush()
         
         if completed == total_procs:
             break
             
-        time.sleep(2.0) # Update 1 time every 2 seconds
+        time.sleep(2.0) # Update once every 2 seconds
 
     print()
 
@@ -320,8 +320,8 @@ def run_parallel_docking(receptor, input_sdf, output_sdf, exhaustiveness, scorin
 
 def perform_cnn_rescoring(receptor, input_sdf, output_sdf, gpu_id=0):
     """
-    Runs a SINGLE Gnina process to rescore all ligands in the SDF using the GPU.
-    This prevents Out Of Memory Error because only one model is loaded.
+    Runs only one Gnina process to rescore all ligands in the SDF using the GPU
+    to prevent Out Of Memory Error since only one model is loaded.
     """
     if not is_gpu_available():
         log("CNN", "GPU not found. Skipping CNN Rescoring.", Colors.WARNING)
@@ -331,8 +331,8 @@ def perform_cnn_rescoring(receptor, input_sdf, output_sdf, gpu_id=0):
     gnina_exe = "gnina"
     log("CNN", "Starting Batch CNN Rescoring on GPU...", Colors.GREEN)
     
-    # --score_only calculates the score for the existing pose
-    # --cnn_scoring adds the CNN tags
+    # --score_only calculates score for existing pose
+    # --cnn_scoring adds CNN tags
     cmd = [
         gnina_exe, '-r', receptor, '-l', input_sdf, '-o', output_sdf,
         '--score_only', '--cnn_scoring', 'rescore', '--device', str(gpu_id), '--quiet'
@@ -544,7 +544,7 @@ def run_screening_track(scoring_func, base_output_dir, return_dict, config):
         count = filter_sdf(ultra_out, ultra_surv, frac_ultra)
         if count == 0: return
         
-    # CNN RESCORING (GPU - Single Process)
+    # CNN RESCORING (GPU, Single Process)
 
     final_ligands_path = ultra_surv
     
@@ -592,7 +592,7 @@ def run_screening_track(scoring_func, base_output_dir, return_dict, config):
         'timestep': config.get('gbsa_timestep', 2.0)
     }
 
-    # Pass the RESCORED file to analysis
+    # Pass RESCORED file to analysis
     track_data = analyze_track_results(final_ligands_path, rec_pdb, track_dir, color, scoring_func, run_gbsa=run_gbsa, run_plip=run_plip, forcefield_xmls=ff_xmls, gbsa_params=gbsa_params, gpu_id=assigned_gpu)
     
     with open(analysis_json, 'w') as f:

@@ -59,7 +59,7 @@ def generate_reports(results_vina, results_vinardo, output_base, scoring_mode):
     csv_file = os.path.join(output_base, "FINAL_SUMMARY.csv")
     html_file = os.path.join(output_base, "FINAL_SUMMARY.html")
     
-    # --- HTML HEADER & CSS ---
+    # HTML HEADER & CSS
     html_content = ["""
     <!DOCTYPE html>
     <html>
@@ -101,7 +101,7 @@ def generate_reports(results_vina, results_vinardo, output_base, scoring_mode):
     <tbody>
     """]
 
-    # --- GENERATE CONTENT ---
+    # generate content
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
         
@@ -136,16 +136,16 @@ def generate_reports(results_vina, results_vinardo, output_base, scoring_mode):
             
             is_consensus = (s_v != 0 and s_vo != 0)
 
-            # CNN Properties
+            # CNN properties
             cnn_score_v = v_data.get('properties', {}).get('CNNscore', 'N/A')
             cnn_aff_v = v_data.get('properties', {}).get('CNNaffinity', 'N/A')
             cnn_score_vo = vo_data.get('properties', {}).get('CNNscore', 'N/A')
             cnn_aff_vo = vo_data.get('properties', {}).get('CNNaffinity', 'N/A')
 
-            # --- LINKS GENERATION ---
+            # LINKS GENERATION 
             safe_name = get_safe_name(lig)
 
-            # VINA Links
+            # VINA links
             if s_v != 0:
                 path_v = f"./vina_track/complexes/{safe_name}_complex.pdb" 
                 # Excel Link (Opens File)
@@ -156,7 +156,7 @@ def generate_reports(results_vina, results_vinardo, output_base, scoring_mode):
                 link_v_csv = "N/A"
                 link_v_html = '<span class="na">N/A</span>'
 
-            # VINARDO Links
+            # VINARDO links
             if s_vo != 0:
                 path_vo = f"./vinardo_track/complexes/{safe_name}_complex.pdb"
                 link_vo_csv = f'=HYPERLINK("{path_vo}", "Open PDB")'
@@ -177,7 +177,7 @@ def generate_reports(results_vina, results_vinardo, output_base, scoring_mode):
                 link_v_csv, link_vo_csv
             ])
 
-            # Append HTML Row
+            # Append HTML row
             html_content.append(f"""
             <tr>
                 <td><b>{lig}</b></td>
@@ -202,7 +202,7 @@ def generate_reports(results_vina, results_vinardo, output_base, scoring_mode):
     print(f"         1. {csv_file}")
     print(f"         2. {html_file} (Use this for 'Download PDB' buttons)")
 
-    # GENERATE TEXT TABLE (Standard Text Report Logic)
+    # GENERATE TEXT TABLE
     w_lig = len("LIGAND")
     w_plip_v = len("PLIP (VINA)")
     w_plip_vo = len("PLIP (VINARDO)")
@@ -294,13 +294,14 @@ if __name__ == '__main__':
     parser.add_argument('--size_y', type=float, required=True, help='Size Y')
     parser.add_argument('--size_z', type=float, required=True, help='Size Z\n')
     
+    # Lig prep params
     parser.add_argument('--skip_prep', action='store_true', help="Skip ligand preparation step")
     parser.add_argument('--prep_ff', type=str, default="MMFF94", help="Force Field for ligand preparation")
 
     parser.add_argument('--cpu_count', type=int, default=0, help='Total CPUs to allocate (Selecting 0 causes the tool to utilises max. no. of CPUs available)')
     parser.add_argument('--prep_cpus', type=int, default=0, help='CPUs for ligand preparation (0 = Auto/75%%)')
 
-    # Simulation Params
+    # Workflow Params
     parser.add_argument('--exh_rapid', type=int, default=2, help='Exhaustiveness RAPID (def: 1)')
     parser.add_argument('--exh_balanced', type=int, default=8, help='Exhaustiveness BALANCED (def: 8)')
     parser.add_argument('--exh_ultra', type=int, default=32, help='Exhaustiveness ULTRA (def: 32)\n')
@@ -317,6 +318,7 @@ if __name__ == '__main__':
     parser.add_argument('--cnn_scoring', type=str, default='rescore', help="Enable GNINA CNN Re-Scoring (Requires GPU)")
     parser.add_argument('--gpu_device', type=int, default=0, help="GPU Device ID to use (def: 0)")
 
+    # MMGBSA params
     parser.add_argument('--forcefield', default='amber14-all', choices=FORCE_FIELD_MAP.keys(), help='Force Field for MM-GBSA')
     
     parser.add_argument('--gbsa_temp', type=float, default=300.0, help='Temperature in Kelvin for MM-GBSA (def: 300.0 K)')
@@ -362,7 +364,7 @@ if __name__ == '__main__':
     config['ff-xmls'] = FORCE_FIELD_MAP.get(selected_ff, FORCE_FIELD_MAP['amber14-all'])
     print(f"[CONFIGURATION] Force Field: {selected_ff} : {config['ff-xmls']}")  
 
-    # LIGAND PREPARATION
+    # LIGAND PREP
     print ("===== LIGAND PREPARATION =====")
     
     if args.skip_prep:
@@ -407,7 +409,7 @@ if __name__ == '__main__':
         
     print("\n===== ALL TRACKS COMPLETED. GENERATING REPORTS =====")
     
-    # Handle report generation logic based on mode
+    # Report generation based on mode
     if scoring_mode == 'both':
         generate_reports(final_results['vina'], final_results['vinardo'], output_base, 'both')
     elif scoring_mode == 'vina':

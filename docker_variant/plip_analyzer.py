@@ -12,7 +12,7 @@ class PLIPAnalyzer:
 
     def analyze_interactions(self, ligand_mol, output_dir="plip_reports"):
         """
-        Creates a complex, runs PLIP and returns a summary of interactions.
+        Creates a complex, runs PLIP and returns summary of interactions.
         """
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)

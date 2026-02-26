@@ -11,7 +11,7 @@ from pdbfixer import PDBFixer
 class GBSAScorer:
     """
     Helper class to perform MM_GBSA rescoring on docked poses.
-    Fixed to use NoCutoff for accurate Implicit Solvent calculations.
+    Fixed to use NoCutoff for accurate implicit solvent calculations.
     """
 
     def __init__(self, receptor_pdb_path, forcefield_xmls=None, temp=300.0, friction=1.0, timestep_fs = 2.0, gpu_device_index=0):
