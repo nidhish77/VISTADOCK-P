@@ -81,7 +81,7 @@ python3 -u vistadock.py --receptor_pdb receptor.pdb --ligand ligands.sdf ....
 
 ------------------------------------------------------------------------
 
-## How it works (The 'Survivor-based' *Funnel* Protocol)
+## How it works
 
 VISTADOCK-P processes ligands in three stages of increasing exhaustiveness: 
 
