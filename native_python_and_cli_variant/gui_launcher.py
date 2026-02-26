@@ -137,13 +137,13 @@ class PipelineGUI:
         self.no_mmgbsa_var = tk.BooleanVar(value=False)
         self.no_plip_var = tk.BooleanVar(value=False)
         
-        ttk.Separator(opt_frame, orient='horizontal').grid(row=6, column=0, columnspan=3, sticky='ew', pady=(15,5))
+        ttk.Separator(opt_frame, orient='horizontal').grid(row=4, column=0, columnspan=3, sticky='ew', pady=(15,5))
         
         self.run_prep_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(opt_frame, text="Perform Ligand Preparation (Uncheck to bypass)", variable = self.run_prep_var, command=self.toggle_prep_options).grid(row=4, column=0, columnspan=2, sticky='w', pady=(10,2))
+        ttk.Checkbutton(opt_frame, text="Perform Ligand Preparation (Uncheck to bypass)", variable = self.run_prep_var, command=self.toggle_prep_options).grid(row=5, column=0, columnspan=2, sticky='w', pady=(10,2))
 
         self.prep_opts_frame = ttk.Frame(opt_frame)
-        self.prep_opts_frame.grid(row=5, column=0, columnspan=2, sticky='w', padx=20)
+        self.prep_opts_frame.grid(row=6, column=0, columnspan=2, sticky='w', padx=20)
         
         ttk.Label(self.prep_opts_frame, text="Ligand Preparation Force Field: ").grid(row=0, column=0, sticky='w')
         self.prep_ff_var = tk.StringVar(value="MMFF94")
