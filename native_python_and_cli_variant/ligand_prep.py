@@ -9,9 +9,10 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors
 
 class LigandPrepper:
-    def __init__(self, output_dir, cpu_count=1):
+    def __init__(self, output_dir, cpu_count=1, config=None):
         self.output_dir = output_dir
         self.cpu_count = cpu_count
+        self.config = config if config else {'ff':'MMFF94'}
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -125,7 +126,8 @@ class LigandPrepper:
                 cmd = [
                     "obabel", input_flag, temp_in, 
                     "-osdf", "-O", temp_out,
-                    "-p", "7.4", "--partialcharge", "gasteiger", "--gen3d"
+                    "-p", "7.4", "--partialcharge", "gasteiger", "--gen3d",
+                    "--ff", self.config.get('ff', 'MMFF94')
                 ]
 
                 try:
@@ -272,14 +274,16 @@ class LigandPrepper:
         print(f"[PREP] Lipinski Filter: {passed}/{total} molecules passed.")
         return output_filtered
 
-def run_ligand_prep(input_file, output_dir, apply_lipinski=False, cpu_count=0):
+def run_ligand_prep(input_file, output_dir, apply_lipinski=False, cpu_count=0, prep_ff="MMFF94"):
     if cpu_count > 0:
         use_cpus = cpu_count
     else:
         avail_cpus = multiprocessing.cpu_count()
         use_cpus = max(1, int(avail_cpus * 0.75))
     
-    prepper = LigandPrepper(output_dir, cpu_count=use_cpus)
+    config = {'ff': prep_ff}
+    
+    prepper = LigandPrepper(output_dir, cpu_count=use_cpus, config=config)
     
     prepared_sdf = prepper.convert_and_clean(input_file)
     if not prepared_sdf: return None

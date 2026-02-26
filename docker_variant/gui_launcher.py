@@ -53,9 +53,8 @@ class PipelineGUI:
         ttk.Label(
             disclaimer_frame,
             text=warnings,
-            foreground="#04d939",
+            style="Section.TLabel",
             justify="left",
-            font=("Helvetica", 11)
         ).pack(anchor="w", padx=10, pady=10)
 
         ttk.Label(self.scrollable_frame, text="1. File Selection", style="Section.TLabel").pack(anchor="w", pady=(20,5), padx=10)
@@ -79,19 +78,19 @@ class PipelineGUI:
 
         ttk.Label(self.scrollable_frame, text="3. Docking Parameters", style="Section.TLabel").pack(anchor="w", pady=(20,5), padx=10)
 
-        dock_frame = ttk.Frame(self.scrollable_frame)
-        dock_frame.pack(fill='x', padx=10)
+        self.dock_frame = ttk.Frame(self.scrollable_frame)
+        self.dock_frame.pack(fill='x', padx=10)
 
-        self.exh_rapid = self.create_labelled_entry(dock_frame, "Exhaustiveness (RAPID): ", 0, 0, default="2")
-        self.exh_balanced = self.create_labelled_entry(dock_frame, "Exhaustiveness (BALANCED): ", 1, 0, default="8")
-        self.exh_ultra = self.create_labelled_entry(dock_frame, "Exhaustiveness (ULTRA): ", 2, 0, default="32")
+        self.exh_rapid = self.create_labelled_entry(self.dock_frame, "Exhaustiveness (RAPID): ", 0, 0, default="2")
+        self.exh_balanced = self.create_labelled_entry(self.dock_frame, "Exhaustiveness (BALANCED): ", 1, 0, default="8")
+        self.exh_ultra = self.create_labelled_entry(self.dock_frame, "Exhaustiveness (ULTRA): ", 2, 0, default="32")
 
-        self.frac_rapid = self.create_labelled_entry(dock_frame, "Fraction to keep after RAPID: ", 0, 2, default="0.5")
-        self.frac_balanced = self.create_labelled_entry(dock_frame, "Fraction to keep after BALANCED: ", 1, 2, default="0.3")
-        self.frac_ultra = self.create_labelled_entry(dock_frame, "Fraction to keep after ULTRA: ", 2, 2, default="1.0")
+        self.frac_rapid = self.create_labelled_entry(self.dock_frame, "Fraction to keep after RAPID: ", 0, 2, default="0.5")
+        self.frac_balanced = self.create_labelled_entry(self.dock_frame, "Fraction to keep after BALANCED: ", 1, 2, default="0.3")
+        self.frac_ultra = self.create_labelled_entry(self.dock_frame, "Fraction to keep after ULTRA: ", 2, 2, default="1.0")
 
         self.single_step_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(dock_frame, text="SingleStep Docking (Bypass RAPID & BALANCED, run only ULTRA)", variable=self.single_step_var).grid(row=3, column=0, columnspan=4, sticky='w', pady=(10, 0))
+        ttk.Checkbutton(self.dock_frame, text="SingleStep Docking (Bypass RAPID & BALANCED, run only ULTRA)", variable=self.single_step_var, command=self.toggle_single_step).grid(row=3, column=0, columnspan=4, sticky='w', pady=(10, 0))
 
         ttk.Label(self.scrollable_frame, text="4. Workflow Options", style="Section.TLabel").pack(anchor="w", pady=(20,5), padx=10)
 
@@ -135,17 +134,28 @@ class PipelineGUI:
         self.lipinksi_var = tk.BooleanVar(value=False)
         self.no_mmgbsa_var = tk.BooleanVar(value=False)
         self.no_plip_var = tk.BooleanVar(value=False)
+        
+        self.run_prep_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(opt_frame, text="Perform Ligand Preparation (Uncheck to bypass)", variable=self.run_prep_var, command=self.toggle_prep_options).grid(row=4, column=0, columnspan=2, sticky='w', pady=(10,2))
+        
+        self.prep_opts_frame = ttk.Frame(opt_frame)
+        self.prep_opts_frame.grid(row=5, column=0, columnspan=2, sticky='w', padx=20)
+        
+        ttk.Label(self.prep_opts_frame, text="Ligand Preparation Force Field: ").grid(row=0, column=0, sticky='w')
+        self.prep_ff_var = tk.StringVar(value="MMFF94")
+        prep_ffs = ["MMFF94", "MMFF94s", "UFF", "Ghemical", "GAFF"]
+        ttk.OptionMenu(self.prep_opts_frame, self.prep_ff_var, "MMFF94", *prep_ffs).grid(row=0, column=1, sticky='w', padx=5)
 
-        ttk.Checkbutton(opt_frame, text="Apply Lipinski's Rule of 5 Filter", variable=self.lipinksi_var).grid(row=4, column=0, columnspan=2, sticky='w')
-        ttk.Checkbutton(opt_frame, text="Skip MM-GBSA (Faster but less accurate)", variable=self.no_mmgbsa_var).grid(row=5, column=0, columnspan=2, sticky='w')
-        ttk.Checkbutton(opt_frame, text="Skip PLIP Analysis (Faster but no interaction data)", variable=self.no_plip_var).grid(row=6, column=0, columnspan=2, sticky='w')
+        ttk.Checkbutton(opt_frame, text="Apply Lipinski's Rule of 5 Filter", variable=self.lipinksi_var).grid(row=6, column=0, columnspan=2, sticky='w')
+        ttk.Checkbutton(opt_frame, text="Skip MM-GBSA (Faster but less accurate)", variable=self.no_mmgbsa_var).grid(row=7, column=0, columnspan=2, sticky='w')
+        ttk.Checkbutton(opt_frame, text="Skip PLIP Analysis (Faster but no interaction data)", variable=self.no_plip_var).grid(row=8, column=0, columnspan=2, sticky='w')
 
         self.cnn_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(opt_frame, text="Enable GNINA CNN Re-Scoring (Requires GPU)", variable=self.cnn_var).grid(row=7, column=0, columnspan=2, sticky='w')
+        ttk.Checkbutton(opt_frame, text="Enable GNINA CNN Re-Scoring (Requires GPU)", variable=self.cnn_var).grid(row=9, column=0, columnspan=2, sticky='w')
 
-        ttk.Label(opt_frame, text="GPU Device ID (0,1, ...): ").grid(row=8, column=0, sticky='w', pady=5)
+        ttk.Label(opt_frame, text="GPU Device ID (0,1, ...): ").grid(row=10, column=0, sticky='w', pady=5)
         self.gpu_id_var = tk.StringVar(value="0")
-        tk.Entry(opt_frame, textvariable=self.gpu_id_var, width=5).grid(row=8, column=1, sticky='w', padx=5)
+        tk.Entry(opt_frame, textvariable=self.gpu_id_var, width=5).grid(row=10, column=1, sticky='w', padx=5)
 
         ttk.Label(self.scrollable_frame, text="5. MM-GBSA Parameters", style="Section.TLabel").pack(anchor='w', pady=(20,5), padx=10)
         md_frame = ttk.Frame(self.scrollable_frame)
@@ -206,6 +216,17 @@ class PipelineGUI:
         ttk.Entry(parent, textvariable=entry_var, width=10).grid(row=row, column=col+1, sticky='w', padx=5, pady=2)
         return entry_var
     
+    def toggle_prep_options(self):
+        state = 'normal' if self.run_prep_var.get() else 'disabled'
+        for child in self.prep_opts_frame.winfo_children():
+            child.configure(state=state)
+            
+    def toggle_single_step(self):
+        state = 'disabled' if self.single_step_var.get() else 'normal'
+        for row in [0,1]:
+            for child in self.dock_frame.grid_slaves(row=row):
+                child.configure(state=state)
+    
     def generate_command(self):
         rec_full_path = self.receptor_path.get()
         rec = rec_full_path.split('/')
@@ -243,6 +264,11 @@ class PipelineGUI:
             cmd_parts.extend(['--cpu_count', self.cpu_var.get()])
         except:
             cmd_parts.extend(['--cpu_count', '0'])
+        
+        if not self.run_prep_var.get():
+            cmd_parts.append('--skip_prep')
+        else:
+            cmd_parts.append(f'--prep_ff {self.prep_ff_var.get()}')
         
         try:
             cmd_parts.extend(['--prep_cpus', self.prep_cpu_var.get()])

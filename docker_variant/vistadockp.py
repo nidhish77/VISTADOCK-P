@@ -279,6 +279,9 @@ if __name__ == '__main__':
     parser.add_argument('--size_y', type=float, required=True, help='Size Y')
     parser.add_argument('--size_z', type=float, required=True, help='Size Z\n')
 
+    parser.add_argument('--skip_prep', action='store_true', help="Skip ligand preparation step")
+    parser.add_argument('prep_ff', type=str, default="MMFF94", help="Force Field for ligand preparation")
+
     parser.add_argument('--cpu_count', type=int, default=0, help='Total CPUs to allocate (Selecting 0 causes the tool to utilises max. no. of CPUs available)')
     parser.add_argument('--prep_cpus', type=int, default=0, help='CPUs for ligand preparation (0 = Auto/75%%)')
 
@@ -338,12 +341,18 @@ if __name__ == '__main__':
 
     # LIGAND PREPARATION
     print ("===== LIGAND PREPARATION =====")
-    prepared_lig_path = run_ligand_prep(
-        input_file=args.ligand,
-        output_dir=args.output_dir,
-        apply_lipinski=args.lipinski,
-        cpu_count=args.prep_cpus 
-    )
+    
+    if args.skip_prep:
+        print("Skipping ligand preparation (User requested).")
+        prepared_lig_path = args.ligand
+    else:
+        prepared_lig_path = run_ligand_prep(
+            input_file=args.ligand,
+            output_dir=args.output_dir,
+            apply_lipinski=args.lipinski,
+            cpu_count=args.prep_cpus,
+            prep_ff = args.prep_ff
+        )
     
     if not prepared_lig_path:
         print("[CRITICAL ERROR] Ligand preparation failed. Exiting....")
