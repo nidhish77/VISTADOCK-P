@@ -11,7 +11,7 @@ class PipelineGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("VISTADOCK-P Command Constructor")
-        self.root.geometry("700x850")
+        self.root.geometry("800x850")
 
         style = ttk.Style()
         style.configure("Bold.TLabel", font=("Helvetica", 13, 'bold'))
