@@ -55,7 +55,7 @@ class PipelineGUI:
         ttk.Label(
             disclaimer_frame,
             text=warnings,
-            style="Section.TLabel",
+            font=("Helvetica", 11),
             justify="left",
         ).pack(anchor="w", padx=10, pady=10)
 
