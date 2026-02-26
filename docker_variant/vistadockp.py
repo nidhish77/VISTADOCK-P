@@ -4,6 +4,21 @@ import argparse
 import csv
 from pipeline_worker_functions import run_screening_track, ensure_directory
 from ligand_prep import run_ligand_prep
+import sys
+
+class Logger(object):
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a")
+        
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
+        
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
 
 # Mapping user selection to OpenMM Force FIelds
 FORCE_FIELD_MAP = {
@@ -330,6 +345,14 @@ if __name__ == '__main__':
     # SETUP
     output_base = args.output_dir
     ensure_directory(output_base)
+    
+    log_file_path = os.path.join(output_base, "vistadockp.log")
+    sys.stdout = Logger(log_file_path)
+    sys.stderr = sys.stdout
+    
+    print("\n" + "="*50)
+    print("VISTADOCK-P EXECUTION LOG STARTED")
+    print("="*50 + "\n")
     
     config = vars(args)
 

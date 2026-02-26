@@ -42,7 +42,7 @@ class PipelineGUI:
     def create_widgets(self):
         paddings = {'padx':10, 'pady':5}
 
-        disclaimer_frame = ttk.LabelFrame(self.scrollable_frame, text="IMPORTANT DISCLAIMERS")
+        disclaimer_frame = ttk.LabelFrame(self.scrollable_frame, text="CHECKLIST")
         disclaimer_frame.pack(fill="x", padx=10, pady=(10,20))
 
         warnings = ("1. Ensure that you have created a conda environment with all the packages required for the pipeline\n    (all the packages and binaries mentioned in the file 'environment.yml')\n"
@@ -148,16 +148,21 @@ class PipelineGUI:
         prep_ffs = ["MMFF94", "MMFF94s", "UFF", "Ghemical", "GAFF"]
         ttk.OptionMenu(self.prep_opts_frame, self.prep_ff_var, "MMFF94", *prep_ffs).grid(row=0, column=1, sticky='w', padx=5)
 
-        ttk.Checkbutton(opt_frame, text="Apply Lipinski's Rule of 5 Filter", variable=self.lipinksi_var).grid(row=6, column=0, columnspan=2, sticky='w')
-        ttk.Checkbutton(opt_frame, text="Skip MM-GBSA (Faster but less accurate)", variable=self.no_mmgbsa_var).grid(row=7, column=0, columnspan=2, sticky='w')
-        ttk.Checkbutton(opt_frame, text="Skip PLIP Analysis (Faster but no interaction data)", variable=self.no_plip_var).grid(row=8, column=0, columnspan=2, sticky='w')
-
+        ttk.Separator(opt_frame, orient='horizontal').grid(row=6, column=0, columnspan=3, sticky='ew', pady=(15,5))
+        
+        ttk.Checkbutton(opt_frame, text="Apply Lipinski's Rule of 5 Filter", variable=self.lipinksi_var).grid(row=7, column=0, columnspan=3, sticky='w')
         self.cnn_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(opt_frame, text="Enable GNINA CNN Re-Scoring (Requires GPU)", variable=self.cnn_var).grid(row=9, column=0, columnspan=2, sticky='w')
+        ttk.Checkbutton(opt_frame, text="Enable GNINA CNN Re-Scoring (Requires GPU)", variable=self.cnn_var).grid(row=8, column=0, columnspan=3, sticky='w')
 
-        ttk.Label(opt_frame, text="GPU Device ID (0,1, ...): ").grid(row=10, column=0, sticky='w', pady=5)
+        ttk.Label(opt_frame, text="GPU Device ID (0,1, ...): ").grid(row=9, column=0, sticky='w', pady=5)
         self.gpu_id_var = tk.StringVar(value="0")
-        tk.Entry(opt_frame, textvariable=self.gpu_id_var, width=5).grid(row=10, column=1, sticky='w', padx=5)
+        tk.Entry(opt_frame, textvariable=self.gpu_id_var, width=5).grid(row=9, column=1, sticky='w', padx=5)
+        ttk.Label(opt_frame, text="(GPU Required for CNN Re-scoring, optional for MM-GBSA acceleration)", font=("Helvetica", 9, "italic")).grid(row=9, column=2, sticky='w', padx=5)
+        
+        ttk.Separator(opt_frame, orient="horizontal").grid(row=10, column=0, columnspan=3, sticky='ew', pady=(15,5))
+        
+        ttk.Checkbutton(opt_frame, text="Skip MM-GBSA (Faster but less accurate)", variable=self.no_mmgbsa_var).grid(row=11, column=0, columnspan=3, sticky='w')
+        ttk.Checkbutton(opt_frame, text="Skip PLIP Analysis (Faster but no interaction data)", variable=self.no_plip_var).grid(row=12, column=0, columnspan=3, sticky='w')
 
         ttk.Label(self.scrollable_frame, text="5. MM-GBSA Parameters", style="Section.TLabel").pack(anchor='w', pady=(20,5), padx=10)
         md_frame = ttk.Frame(self.scrollable_frame)
@@ -173,7 +178,7 @@ class PipelineGUI:
         gen_btn = ttk.Button(btn_frame, text="GENERATE COMMAND", command=self.generate_command)
         gen_btn.pack(side='left', padx=10, ipadx=10, ipady=5)
 
-        run_btn = ttk.Button(btn_frame, text="RUN PIPELINE", command=self.run_pipeline)
+        run_btn = ttk.Button(btn_frame, text="RUN VISTADOCK-P", command=self.run_pipeline)
         run_btn.pack(side='left', padx=10, ipadx=10, ipady=5)
 
         ttk.Label(self.scrollable_frame, text="Copy this command into your terminal: ", style="Bold.TLabel").pack(anchor='w', padx=10)
